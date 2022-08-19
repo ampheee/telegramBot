@@ -2,7 +2,7 @@ package files
 
 import (
 	"encoding/gob"
-	"github.com/ampheee/telegramBot/v2/lib/errors"
+	"github.com/ampheee/telegramBot/v2/lib/errs"
 	"github.com/ampheee/telegramBot/v2/lib/storage"
 	"math/rand"
 	"os"
@@ -22,7 +22,7 @@ func New(basePath string) Storage {
 	return Storage{basePath: basePath}
 }
 func (s Storage) Save(page *storage.Page) (err error) {
-	defer func() { err = errors.Wrap("cant init storage", err) }()
+	defer func() { err = errs.Wrap("cant init storage", err) }()
 
 	filePath := filepath.Join(s.basePath, page.UserName)
 	if err := os.MkdirAll(filePath, permission); err != nil {
@@ -57,7 +57,7 @@ func (s Storage) PickRandom(username string) (page *storage.Page, err error) {
 		return nil, err
 	}
 	if len(files) == 0 {
-		return nil, errors.Wrap("NO FILES IN STORAGE", err)
+		return nil, storage.ErrNoSavedPages
 	}
 	rand.Seed(time.Now().UnixNano())
 	n := rand.Intn(len(files))
@@ -68,12 +68,12 @@ func (s Storage) PickRandom(username string) (page *storage.Page, err error) {
 func (s Storage) decode(filePath string) (*storage.Page, error) {
 	f, err := os.Open(filePath)
 	if err != nil {
-		return nil, errors.Wrap("cant decode storage page", err)
+		return nil, errs.Wrap("cant decode storage page", err)
 	}
 	defer func() { _ = f.Close() }()
 	var p storage.Page
 	if err != gob.NewDecoder(f).Decode(&p) {
-		return nil, errors.Wrap("cant decode storage page", err)
+		return nil, errs.Wrap("cant decode storage page", err)
 	}
 	return &p, err
 }
@@ -81,11 +81,11 @@ func (s Storage) decode(filePath string) (*storage.Page, error) {
 func (s Storage) Remove(p *storage.Page) error {
 	fileName, err := fileName(p)
 	if err != nil {
-		return errors.Wrap("cant remove page", err)
+		return errs.Wrap("cant remove page", err)
 	}
 	path := filepath.Join(s.basePath, p.UserName, fileName)
 	if err := os.Remove(path); err != nil {
-		return errors.Wrap("cant remove page", err)
+		return errs.Wrap("cant remove page", err)
 	}
 	return nil
 }
@@ -93,14 +93,14 @@ func (s Storage) Remove(p *storage.Page) error {
 func (s Storage) IsExist(p *storage.Page) (bool, error) {
 	fName, err := fileName(p)
 	if err != nil {
-		return false, errors.Wrap("cant check page exist", err)
+		return false, errs.Wrap("cant check page exist", err)
 	}
 	filePath := filepath.Join(s.basePath, p.UserName, fName)
 	switch _, err = os.Stat(filePath); {
 	case err == os.ErrNotExist:
 		return false, nil
 	case err != nil:
-		return false, errors.Wrap("cant check page exist", err)
+		return false, errs.Wrap("cant check page exist", err)
 	}
 	return true, nil
 }

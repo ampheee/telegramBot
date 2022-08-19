@@ -2,7 +2,7 @@ package telegram
 
 import (
 	"encoding/json"
-	"github.com/ampheee/telegramBot/v2/lib/errors"
+	"github.com/ampheee/telegramBot/v2/lib/errs"
 	"io"
 	"net/http"
 	"net/url"
@@ -33,19 +33,19 @@ func newBasePath(token string) string {
 	return "bot" + token
 }
 
-func (c *Client) sendMessages(chatID int, text string) error {
+func (c *Client) SendMessages(chatID int, text string) error {
 	q := url.Values{}
 	q.Add("chat_id", strconv.Itoa(chatID))
 	q.Add("text", text)
 	_, err := c.doReq(sendMessageMethod, q)
 	if err != nil {
-		return errors.Wrap("error", err)
+		return errs.Wrap("error", err)
 	}
 	return err
 }
 
 func (c *Client) Updates(offset int, limit int) (updates []Update, err error) {
-	defer func() { err = errors.Wrap("ERROR: can`t do request", err) }()
+	defer func() { err = errs.Wrap("ERROR: can`t do request", err) }()
 	q := url.Values{}
 	q.Add("offset", strconv.Itoa(offset))
 	q.Add("limit", strconv.Itoa(limit))
@@ -62,7 +62,7 @@ func (c *Client) Updates(offset int, limit int) (updates []Update, err error) {
 }
 
 func (c *Client) doReq(method string, q url.Values) (data []byte, err error) {
-	defer func() { err = errors.Wrap("ERROR: can`t do request", err) }()
+	defer func() { err = errs.Wrap("ERROR: can`t do request", err) }()
 	u := url.URL{
 		Scheme: "https",
 		Host:   c.host,

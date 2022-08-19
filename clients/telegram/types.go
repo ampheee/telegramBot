@@ -1,8 +1,8 @@
 package telegram
 
 type Update struct {
-	UpdateId int    `json:"update_id"`
-	Message  string `json:"update_message"`
+	UpdateId int              `json:"update_id"`
+	Message  *IncomingMessage `json:"update_message"`
 }
 
 type UpdateResponse struct {
@@ -10,14 +10,15 @@ type UpdateResponse struct {
 	Result []Update `json:"result"`
 }
 
-func twoSum(nums []int, target int) []int {
-	var temp []int
-	for i := 0; i < len(nums); i++ {
-		for a := len(nums) - 1; a > i; a-- {
-			if nums[i]+nums[a] == target && a != i {
-				temp = []int{i, a}
-			}
-		}
-	}
-	return temp
+type IncomingMessage struct {
+	Text string `json:"text"`
+	From From   `json:"from"`
+	Chat Chat   `json:"chat"`
+}
+type From struct {
+	UserName string `json:"username"`
+}
+
+type Chat struct {
+	Id int `json:"id"`
 }

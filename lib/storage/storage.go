@@ -2,10 +2,13 @@ package storage
 
 import (
 	"crypto/sha1"
+	"errors"
 	"fmt"
-	"github.com/ampheee/telegramBot/v2/lib/errors"
+	"github.com/ampheee/telegramBot/v2/lib/errs"
 	"io"
 )
+
+var ErrNoSavedPages = errors.New("NO FILES IN STORAGE")
 
 type Storage interface {
 	Save(p *Page) error
@@ -22,11 +25,11 @@ type Page struct {
 func (p *Page) Hash() (string, error) {
 	h := sha1.New()
 	if _, err := io.WriteString(h, p.URL); err != nil {
-		return "", errors.Wrap("Error! Can`t calculate hash", err)
+		return "", errs.Wrap("Error! Can`t calculate hash", err)
 	}
 
 	if _, err := io.WriteString(h, p.UserName); err != nil {
-		return "", errors.Wrap("Error! Can`t calculate hash", err)
+		return "", errs.Wrap("Error! Can`t calculate hash", err)
 	}
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
