@@ -2,20 +2,31 @@ package main
 
 import (
 	"flag"
-	"github.com/ampheee/telegramBot/v2/clients/telegram"
+	client "github.com/ampheee/telegramBot/v2/clients/telegram"
+	consEvents "github.com/ampheee/telegramBot/v2/consumer/cons-events"
+	"github.com/ampheee/telegramBot/v2/events/telegram"
+	"github.com/ampheee/telegramBot/v2/storage/files"
 	"log"
 )
 
 const (
-	tgBotHost = "api.telegram.org"
+	tgBotHost   = "api.telegram.org"
+	storagePath = "userpages-storage"
+	batchSize   = 150
 )
 
 func main() {
-	tgClient := telegram.NewClient(tgBotHost, mustToken())
-	// fetcher = fetcher.NewFetcher()
-	// processor = processor.NewProcessor() // will talk with telegramBot api
-	//consumer.Start(fetcher, processor) // with telegramBOT api. Fetcher to fetch reqs, processor
-	// to process reqs and send resps
+	eventsProcessor := telegram.New(
+		client.NewClient(tgBotHost, mustToken()),
+		files.New(storagePath),
+	)
+
+	log.Print("service started")
+
+	consumer := consEvents.New(eventsProcessor, eventsProcessor, batchSize)
+	if err := consumer.Start(); err != nil {
+		log.Fatal("service is stopped", err)
+	}
 }
 
 func mustToken() string {

@@ -2,8 +2,10 @@ package files
 
 import (
 	"encoding/gob"
+	"errors"
 	"github.com/ampheee/telegramBot/v2/lib/errs"
-	"github.com/ampheee/telegramBot/v2/lib/storage"
+	"github.com/ampheee/telegramBot/v2/storage"
+	"log"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -22,7 +24,7 @@ func New(basePath string) Storage {
 	return Storage{basePath: basePath}
 }
 func (s Storage) Save(page *storage.Page) (err error) {
-	defer func() { err = errs.Wrap("cant init storage", err) }()
+	defer func() { err = errs.WrapIfErr("cant init storage", err) }()
 
 	filePath := filepath.Join(s.basePath, page.UserName)
 	if err := os.MkdirAll(filePath, permission); err != nil {
@@ -33,14 +35,13 @@ func (s Storage) Save(page *storage.Page) (err error) {
 		return err
 	}
 	filePath = filepath.Join(filePath, fName)
-	file, err := os.Open(filePath)
+	file, err := os.Create(filePath)
 	if err != nil {
 		return err
 	}
 	defer func() { _ = file.Close() }()
 
-	err = gob.NewEncoder(file).Encode(page)
-	if err != nil {
+	if err := gob.NewEncoder(file).Encode(page); err != nil {
 		return err
 	}
 	return nil
@@ -52,9 +53,12 @@ func fileName(p *storage.Page) (string, error) {
 
 func (s Storage) PickRandom(username string) (page *storage.Page, err error) {
 	filePath := filepath.Join(s.basePath, username)
+
 	files, err := os.ReadDir(filePath)
 	if err != nil {
-		return nil, err
+		if os.IsNotExist(err) {
+			log.Printf("dir is not exist")
+		}
 	}
 	if len(files) == 0 {
 		return nil, storage.ErrNoSavedPages
@@ -97,7 +101,7 @@ func (s Storage) IsExist(p *storage.Page) (bool, error) {
 	}
 	filePath := filepath.Join(s.basePath, p.UserName, fName)
 	switch _, err = os.Stat(filePath); {
-	case err == os.ErrNotExist:
+	case errors.Is(err, os.ErrNotExist):
 		return false, nil
 	case err != nil:
 		return false, errs.Wrap("cant check page exist", err)

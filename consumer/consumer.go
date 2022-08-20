@@ -1,5 +1,5 @@
 package consumer
 
-type consumer interface {
+type Consumer interface {
 	Start() error
 }

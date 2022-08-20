@@ -1,13 +1,13 @@
 package telegram
 
-type Update struct {
-	UpdateId int              `json:"update_id"`
-	Message  *IncomingMessage `json:"update_message"`
-}
-
-type UpdateResponse struct {
+type UpdatesResponse struct {
 	Ok     bool     `json:"ok"`
 	Result []Update `json:"result"`
+}
+
+type Update struct {
+	ID      int              `json:"update_id"`
+	Message *IncomingMessage `json:"message"`
 }
 
 type IncomingMessage struct {
@@ -15,10 +15,11 @@ type IncomingMessage struct {
 	From From   `json:"from"`
 	Chat Chat   `json:"chat"`
 }
+
 type From struct {
-	UserName string `json:"username"`
+	Username string `json:"username"`
 }
 
 type Chat struct {
-	Id int `json:"id"`
+	ID int `json:"id"`
 }
